@@ -15,10 +15,6 @@ import org.wikidata.wdtk.datamodel.interfaces.PropertyDocument;
  * Adds wikidata entities to Neo4j, keeps a map of entity id to
  * Neo4j node id.
  * 
- * Stores only entities that have an English label.
- * 
- * @author jens
- *
  */
 class EntityDumper implements EntityDocumentProcessor {
 
@@ -27,9 +23,15 @@ class EntityDumper implements EntityDocumentProcessor {
 		this.txKeeper = txKeeper;
 	}
 
+	public EntityDumper(GraphDatabaseService graphDb, ITxKeeper txKeeper, String lang, boolean withDescription) {
+		this(graphDb, txKeeper);
+	}
+	
 	private GraphDatabaseService graphDb;
 	private ITxKeeper txKeeper;
-
+	private String lang = "en";
+	private boolean withDescription = true;
+	
 	private Runtime runtime = Runtime.getRuntime();
 
 	private HashMap<String, Long> entities = new HashMap<String, Long>();
@@ -44,23 +46,23 @@ class EntityDumper implements EntityDocumentProcessor {
 		return propertyLabels;
 	}
 
-	
 	@Override
 	public void processItemDocument(ItemDocument itemDocument) {
 		String id = itemDocument.getItemId().getId();
 
-		MonolingualTextValue label = itemDocument.getLabels().get("de");
+		MonolingualTextValue label = itemDocument.getLabels().get(lang);
 		if (label == null || label.getText() == null || label.getText() == "")
 			return;
 
 		Node entity = createEntity(id, label, Labels.Entity);
-		//addItemDescription(itemDocument, entity);
+		if(withDescription)
+			addItemDescription(itemDocument, entity);
 	}
 
 	@Override
 	public void processPropertyDocument(PropertyDocument propertyDocument) {
 		String id = propertyDocument.getEntityId().getId();
-		MonolingualTextValue label = propertyDocument.getLabels().get("de");
+		MonolingualTextValue label = propertyDocument.getLabels().get(lang);
 		if (label == null || label.getText() == null || label.getText() == "")
 			return;
 
@@ -82,7 +84,7 @@ class EntityDumper implements EntityDocumentProcessor {
 	
 	private void addItemDescription(ItemDocument itemDocument, Node entity) {
 		MonolingualTextValue description = 
-			itemDocument.getDescriptions().get("en");
+			itemDocument.getDescriptions().get(lang);
 		
 		if (description != null) {
 			String descriptionText = description.getText();

@@ -22,7 +22,7 @@ class Dump2Neo4j  {
 		try {
 			TxKeeper txKeeper = new TxKeeper(tx, 50000);
 			
-			EntityDumper entityDumper = new EntityDumper(graphDb, txKeeper);
+			EntityDumper entityDumper = new EntityDumper(graphDb, txKeeper, "de", false);
 			ExampleHelpers.processEntitiesFromWikidataDump(entityDumper);
 			
 			StatementDumper statementDumper = 

@@ -19,12 +19,9 @@ import org.wikidata.wdtk.datamodel.interfaces.ValueSnak;
 
 
 /**
- * Add statement from wikidata items to Neo4j. ValueSnaks only for now.
+ * Add statements from wikidata items to Neo4j. ValueSnaks only for now.
  * Creates a relationship if the statement has an ItemIdValue 
  * or adds a string valued item property else.
- *  
- * @author jens
- *
  */
 class StatementDumper implements EntityDocumentProcessor {
 
