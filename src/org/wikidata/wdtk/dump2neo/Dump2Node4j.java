@@ -12,10 +12,10 @@ class Dump2Neo4j  {
 	public static void main(String[] args) throws IOException {
 		ExampleHelpers.configureLogging();
 
-		inserter = BatchInserters.inserter("target/wd-en-nodesc");
+		inserter = BatchInserters.inserter("target/wd-de-nodesc");
 		
 		try {			
-			EntityDumper entityDumper = new EntityDumper(inserter, "en", false);
+			EntityDumper entityDumper = new EntityDumper(inserter, "de", false);
 			ExampleHelpers.processEntitiesFromWikidataDump(entityDumper);
 			
 			StatementDumper statementDumper = new StatementDumper(inserter, entityDumper.getEntities());

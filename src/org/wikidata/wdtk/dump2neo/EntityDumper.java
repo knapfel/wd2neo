@@ -37,20 +37,16 @@ class EntityDumper implements EntityDocumentProcessor {
 	public void processItemDocument(ItemDocument itemDocument) {
 		String id = itemDocument.getItemId().getId();
 		MonolingualTextValue label = itemDocument.getLabels().get(lang);
-		if (label == null || label.getText() == null || label.getText() == "")
-			return;
-
-		createEntity(id, label, itemDocument, Labels.Entity);
+		if (!isNullOrEmpty(label))
+			createEntity(id, label, itemDocument, Labels.Entity);
 	}
 
 	@Override
 	public void processPropertyDocument(PropertyDocument propertyDocument) {
 		String id = propertyDocument.getEntityId().getId();
 		MonolingualTextValue label = propertyDocument.getLabels().get(lang);
-		if (label == null || label.getText() == null || label.getText() == "")
-			return;
-
-		createEntity(id, label, null, Labels.Property);
+		if (!isNullOrEmpty(label))
+			createEntity(id, label, null, Labels.Property);
 	}
 
 	private Map<String, Object> properties = new HashMap<>();
@@ -75,11 +71,13 @@ class EntityDumper implements EntityDocumentProcessor {
 		MonolingualTextValue description = 
 			itemDocument.getDescriptions().get(lang);
 		
-		if (description != null) {
-			String descriptionText = description.getText();
-			if (descriptionText != null && descriptionText != "")
-				return description.getText();
-		}
+		if (!isNullOrEmpty(description))
+			return description.getText();
+		
 		return null;
+	}
+	
+	private boolean isNullOrEmpty(MonolingualTextValue label) {
+		return label == null || label.getText() == null || label.getText() == "";
 	}
 }
