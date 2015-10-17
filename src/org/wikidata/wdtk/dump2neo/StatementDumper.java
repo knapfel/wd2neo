@@ -2,12 +2,8 @@ package org.wikidata.wdtk.dump2neo;
 
 import java.util.HashMap;
 
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
 import org.neo4j.graphdb.DynamicRelationshipType;
-import org.neo4j.graphdb.GraphDatabaseService;
-import org.neo4j.graphdb.Node;
-import org.neo4j.graphdb.Relationship;
+import org.neo4j.unsafe.batchinsert.BatchInserter;
 import org.wikidata.wdtk.datamodel.interfaces.EntityDocumentProcessor;
 import org.wikidata.wdtk.datamodel.interfaces.ItemDocument;
 import org.wikidata.wdtk.datamodel.interfaces.ItemIdValue;
@@ -17,30 +13,18 @@ import org.wikidata.wdtk.datamodel.interfaces.StatementGroup;
 import org.wikidata.wdtk.datamodel.interfaces.Value;
 import org.wikidata.wdtk.datamodel.interfaces.ValueSnak;
 
-
-/**
- * Add statements from wikidata items to Neo4j. ValueSnaks only for now.
- * Creates a relationship if the statement has an ItemIdValue 
- * or adds a string valued item property else.
- */
 class StatementDumper implements EntityDocumentProcessor {
 
 	public StatementDumper(
-			GraphDatabaseService graphDb,
-			HashMap<String, Long> entities, 
-			HashMap<String, String> propertyLabels, 
-			ITxKeeper txKeeper) {
+			BatchInserter inserter,
+			HashMap<String, Long> entities) {
 		
-		this.graphDb = graphDb;
 		this.entities = entities;
-		this.propertyLabels = propertyLabels;
-		this.txKeeper = txKeeper;
+		this.inserter = inserter;
 	}
 
-	private GraphDatabaseService graphDb;
+	private BatchInserter inserter;
 	private HashMap<String, Long> entities;
-	private HashMap<String, String> propertyLabels;
-	private ITxKeeper txKeeper;
 
 	@Override
 	public void processItemDocument(ItemDocument itemDocument) {
@@ -71,24 +55,12 @@ class StatementDumper implements EntityDocumentProcessor {
 					Long objectId = entities.get(oId);
 					if (objectId == null)
 						continue;
-
-					Node subject = graphDb.getNodeById(subjectId);
-					Node object = graphDb.getNodeById(objectId);
 					
-					Relationship s2o = subject.createRelationshipTo(object,
-							DynamicRelationshipType.withName(predicateItemId));
-					s2o.setProperty("id", predicateItemId);
-					String predicateLabel = propertyLabels.get(predicateItemId);
-					if(predicateLabel != null) {
-						s2o.setProperty("label", predicateLabel);
-					} else {
-						Logger.getRootLogger().log(Level.INFO, "predicate " + predicateLabel + " / " + predicateItemId + " not found.");
-					}
-
+					inserter.createRelationship(subjectId, objectId, 
+							DynamicRelationshipType.withName(predicateItemId), null);					
 				} else {
-					graphDb.getNodeById(subjectId).setProperty(predicateItemId, v.toString());
+					inserter.setNodeProperty(subjectId, predicateItemId, v.toString());
 				}
-				txKeeper.checkCommit();
 			}
 		}
 	}
